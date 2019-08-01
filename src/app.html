@@ -8,7 +8,12 @@
     </head>
     <body>
         <div id="app">
-            {{ message }}
+            <div>Your temperature is {{ current.temperature }} {{ current.scale }}</div>
+            <ul>
+                <li v-for="scale in scales">
+                    <button v-on:click="changeScaleTo(scale)">Change to {{ scale }}</button>
+                </li>
+            </ul>
         </div>
     </body>
 </html>
