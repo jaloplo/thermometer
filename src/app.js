@@ -46,7 +46,8 @@ const PositionController = function() {
     };
 };
 
-let provider = (function() {
+
+const FakeWeatherConnector = function() {
     return {
         get: function() {
             return new Promise(function(resolve, reject) {
@@ -57,9 +58,21 @@ let provider = (function() {
                     });
                 }, 500);
             });
+        },
+    };
+};
+
+const WeatherProvider = function(weatherConnector) {
+    let _weatherConnector = weatherConnector;
+    
+    return {
+        get: function() {
+            return new Promise(function(resolve, reject) {
+                _weatherConnector.get().then(res => resolve(res));
+            });
         }
     };
-})();
+};
 
 
 let model = {
@@ -67,17 +80,19 @@ let model = {
     current: {}
 };
 
-provider.get().then(res => model.current = res);
+const weatherConnector = new FakeWeatherConnector();
+const weather = new WeatherProvider(weatherConnector);
 
 let thermometerApp = new Vue({
     el: '#app',
     data: model,
     methods: {
         changeScaleTo: function(newScale) {
-            console.log('changing scale from ' + thermometerApp.current.scale + ' to ' + newScale);
             // TODO: simplify this call, seems so complex to understand
             thermometerApp.current.temperature = temperatureParser.get(thermometerApp.current.scale, newScale)(thermometerApp.current.temperature);
             thermometerApp.current.scale = newScale;
         }
     }
 });
+
+weather.get().then(res => thermometerApp.current = res);
