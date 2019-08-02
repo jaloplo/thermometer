@@ -22,7 +22,11 @@ let temperatureParserHandler = function() {
             if(!collection[source]) {
                 collection[source] = {};
             }
-            collection[source][target] = formula;
+            if(!collection[source][target]) {
+                collection[source][target] = {};
+            }
+
+            collection[source][target].transform = formula;
         }
     };
 };
@@ -33,7 +37,7 @@ temperatureParser.register(KELVIN_SCALE, CELSIUS_SCALE, (degree) => degree - par
 temperatureParser.register(CELSIUS_SCALE, FARENHEIT_SCALE, (degree) => (9*degree/5) + 32);
 temperatureParser.register(FARENHEIT_SCALE, CELSIUS_SCALE, (degree) => (5*(degree-32)) / 9);
 temperatureParser.register(FARENHEIT_SCALE, KELVIN_SCALE, (degree) => (5*(degree-32)) / 9 + parseFloat(273.15));
-temperatureParser.register(KELVIN_SCALE, FARENHEIT_SCALE, (degree) => (9*(degree - 273,15)/5) + 32);
+temperatureParser.register(KELVIN_SCALE, FARENHEIT_SCALE, (degree) => (9*(degree - 273.15)/5) + 32);
 
 
 const PositionController = function() {
@@ -88,8 +92,9 @@ let thermometerApp = new Vue({
     data: model,
     methods: {
         changeScaleTo: function(newScale) {
-            // TODO: simplify this call, seems so complex to understand
-            thermometerApp.current.temperature = temperatureParser.get(thermometerApp.current.scale, newScale)(thermometerApp.current.temperature);
+            thermometerApp.current.temperature = temperatureParser
+                .get(thermometerApp.current.scale, newScale)
+                .transform(thermometerApp.current.temperature);
             thermometerApp.current.scale = newScale;
         }
     }
