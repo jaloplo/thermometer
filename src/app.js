@@ -31,6 +31,21 @@ const TemperatureParserHandler = function() {
     };
 };
 
+const TemperatureParserBuilder = {
+    build: function() {
+        let parser = new TemperatureParserHandler();
+    
+        parser.register(CELSIUS_SCALE, KELVIN_SCALE, (degree) => degree + parseFloat(273.15));
+        parser.register(KELVIN_SCALE, CELSIUS_SCALE, (degree) => degree - parseFloat(273.15));
+        parser.register(CELSIUS_SCALE, FARENHEIT_SCALE, (degree) => (9*degree/5) + 32);
+        parser.register(FARENHEIT_SCALE, CELSIUS_SCALE, (degree) => (5*(degree-32)) / 9);
+        parser.register(FARENHEIT_SCALE, KELVIN_SCALE, (degree) => (5*(degree-32)) / 9 + parseFloat(273.15));
+        parser.register(KELVIN_SCALE, FARENHEIT_SCALE, (degree) => (9*(degree - 273.15)/5) + 32);
+    
+        return parser;
+    }
+};
+
 const PositionController = function() {
     return {
         getBrowserPosition: function() {
@@ -82,13 +97,7 @@ const App = function() {
 
     return {
         init: function() {
-            temperatureParser = new TemperatureParserHandler();
-            temperatureParser.register(CELSIUS_SCALE, KELVIN_SCALE, (degree) => degree + parseFloat(273.15));
-            temperatureParser.register(KELVIN_SCALE, CELSIUS_SCALE, (degree) => degree - parseFloat(273.15));
-            temperatureParser.register(CELSIUS_SCALE, FARENHEIT_SCALE, (degree) => (9*degree/5) + 32);
-            temperatureParser.register(FARENHEIT_SCALE, CELSIUS_SCALE, (degree) => (5*(degree-32)) / 9);
-            temperatureParser.register(FARENHEIT_SCALE, KELVIN_SCALE, (degree) => (5*(degree-32)) / 9 + parseFloat(273.15));
-            temperatureParser.register(KELVIN_SCALE, FARENHEIT_SCALE, (degree) => (9*(degree - 273.15)/5) + 32);
+            temperatureParser = TemperatureParserBuilder.build();
             
             weatherConnector = new FakeWeatherConnector();
             weatherProvider = new AsyncWeatherProvider(weatherConnector);
