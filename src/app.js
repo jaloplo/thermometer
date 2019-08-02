@@ -4,7 +4,7 @@ const KELVIN_SCALE = 'Kelvin';
 
 const SCALES_AVAILABLE = [CELSIUS_SCALE, FARENHEIT_SCALE, KELVIN_SCALE];
 
-let temperatureParserHandler = function() {
+const TemperatureParserHandler = function() {
     let collection = {};
 
     return {
@@ -31,15 +31,6 @@ let temperatureParserHandler = function() {
     };
 };
 
-const temperatureParser = new temperatureParserHandler();
-temperatureParser.register(CELSIUS_SCALE, KELVIN_SCALE, (degree) => degree + parseFloat(273.15));
-temperatureParser.register(KELVIN_SCALE, CELSIUS_SCALE, (degree) => degree - parseFloat(273.15));
-temperatureParser.register(CELSIUS_SCALE, FARENHEIT_SCALE, (degree) => (9*degree/5) + 32);
-temperatureParser.register(FARENHEIT_SCALE, CELSIUS_SCALE, (degree) => (5*(degree-32)) / 9);
-temperatureParser.register(FARENHEIT_SCALE, KELVIN_SCALE, (degree) => (5*(degree-32)) / 9 + parseFloat(273.15));
-temperatureParser.register(KELVIN_SCALE, FARENHEIT_SCALE, (degree) => (9*(degree - 273.15)/5) + 32);
-
-
 const PositionController = function() {
     return {
         getBrowserPosition: function() {
@@ -49,7 +40,6 @@ const PositionController = function() {
         }
     };
 };
-
 
 const FakeWeatherConnector = function() {
     return {
@@ -66,7 +56,7 @@ const FakeWeatherConnector = function() {
     };
 };
 
-const WeatherProvider = function(weatherConnector) {
+const AsyncWeatherProvider = function(weatherConnector) {
     let _weatherConnector = weatherConnector;
     
     return {
@@ -78,26 +68,52 @@ const WeatherProvider = function(weatherConnector) {
     };
 };
 
+const App = function() {
+    let temperatureParser = null;
+    let weatherConnector = null;
+    let weatherProvider = null;
+    let weatherUI = null;
+    
+    let model = {
+        scales: SCALES_AVAILABLE,
+        current: {}
+    };
 
-let model = {
-    scales: SCALES_AVAILABLE,
-    current: {}
+    return {
+        init: function() {
+            temperatureParser = new TemperatureParserHandler();
+            temperatureParser.register(CELSIUS_SCALE, KELVIN_SCALE, (degree) => degree + parseFloat(273.15));
+            temperatureParser.register(KELVIN_SCALE, CELSIUS_SCALE, (degree) => degree - parseFloat(273.15));
+            temperatureParser.register(CELSIUS_SCALE, FARENHEIT_SCALE, (degree) => (9*degree/5) + 32);
+            temperatureParser.register(FARENHEIT_SCALE, CELSIUS_SCALE, (degree) => (5*(degree-32)) / 9);
+            temperatureParser.register(FARENHEIT_SCALE, KELVIN_SCALE, (degree) => (5*(degree-32)) / 9 + parseFloat(273.15));
+            temperatureParser.register(KELVIN_SCALE, FARENHEIT_SCALE, (degree) => (9*(degree - 273.15)/5) + 32);
+            
+            weatherConnector = new FakeWeatherConnector();
+            weatherProvider = new AsyncWeatherProvider(weatherConnector);
+
+            weatherUI = new Vue({
+                el: '#app',
+                data: model,
+                methods: {
+                    changeScaleTo: function(newScale) {
+                        weatherUI.current.temperature = temperatureParser
+                            .get(weatherUI.current.scale, newScale)
+                            .transform(weatherUI.current.temperature);
+                        weatherUI.current.scale = newScale;
+                    }
+                }
+            });
+            return this;
+        },
+        start: function() {
+            weatherProvider.get().then(res => weatherUI.current = res);
+            return this;
+        }
+    };
 };
 
-const weatherConnector = new FakeWeatherConnector();
-const weather = new WeatherProvider(weatherConnector);
-
-let thermometerApp = new Vue({
-    el: '#app',
-    data: model,
-    methods: {
-        changeScaleTo: function(newScale) {
-            thermometerApp.current.temperature = temperatureParser
-                .get(thermometerApp.current.scale, newScale)
-                .transform(thermometerApp.current.temperature);
-            thermometerApp.current.scale = newScale;
-        }
-    }
-});
-
-weather.get().then(res => thermometerApp.current = res);
+let thermometerApp = new App();
+thermometerApp
+    .init()
+    .start();
