@@ -9,12 +9,17 @@
     </head>
     <body>
         <div id="app">
-            <div>Your temperature is {{ current.temperature }} {{ current.scale }}</div>
-            <ul>
-                <li v-for="scale in scales">
-                    <button v-bind:disabled="scale === current.scale" v-on:click="changeScaleTo(scale)">Change to {{ scale }}</button>
-                </li>
-            </ul>
+            <div v-if="status === 0">
+                <h3>Loading...</h3>
+            </div>
+            <div v-if="status === 1">
+                <div>Your temperature is {{ current.temperature }} {{ current.scale }}</div>
+                <ul>
+                    <li v-for="scale in scales">
+                        <button v-bind:disabled="scale === current.scale" v-on:click="changeScaleTo(scale)">Change to {{ scale }}</button>
+                    </li>
+                </ul>
+            </div>
         </div>
     </body>
 </html>

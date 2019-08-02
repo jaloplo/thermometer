@@ -50,7 +50,7 @@ const FakeWeatherConnector = function() {
                         temperature: Math.random() * 20,
                         scale: 'Celsius'
                     });
-                }, 500);
+                }, 1000);
             });
         },
     };
@@ -76,7 +76,8 @@ const App = function() {
     
     let model = {
         scales: SCALES_AVAILABLE,
-        current: {}
+        current: {},
+        status: 0
     };
 
     return {
@@ -107,7 +108,10 @@ const App = function() {
             return this;
         },
         start: function() {
-            weatherProvider.get().then(res => weatherUI.current = res);
+            weatherProvider.get().then(res => {
+                weatherUI.current = res;
+                weatherUI.status = 1;
+            });
             return this;
         }
     };
