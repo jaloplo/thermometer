@@ -133,18 +133,23 @@ const WeatherProviderBuilder = {
 };
 
 
-const AppController = function(transformer, weatherProvider) {
+const VueAppController = function(transformer, weatherProvider) {
 
     let _transformer = transformer;
     let _weatherProvider = weatherProvider;
     
     return new Vue({
+        // app view layer
         el: '#app',
+        
+        // app model layer
         data: {
             scales: SCALES_AVAILABLE,
             current: {},
             status: 0
         },
+
+        // app controller layer
         beforeCreate: function() {
             _weatherProvider.get().then(res => {
                 this.current = res;
@@ -169,4 +174,4 @@ let temperatureService = new TemperatureTransformationService(transformationServ
 let convert = new Converter(temperatureService);
 let weather = WeatherProviderBuilder.build(new FakeWeatherConnector(), AsyncWeatherProvider);
 
-let thermometerApp = new AppController(convert, weather);
+let thermometerApp = new VueAppController(convert, weather);
