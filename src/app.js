@@ -132,66 +132,41 @@ const WeatherProviderBuilder = {
     }
 };
 
+
 const AppController = function(transformer, weatherProvider) {
+
     let _transformer = transformer;
     let _weatherProvider = weatherProvider;
-
-    return {
-        changeScaleTo: function(value, source, target) {
-            return _transformer(value).from(source).to(target);
+    
+    return new Vue({
+        el: '#app',
+        data: {
+            scales: SCALES_AVAILABLE,
+            current: {},
+            status: 0
         },
-        getCurrentTemperature: async function() {
-            let response = await _weatherProvider.get()
-            return response;
+        beforeCreate: function() {
+            _weatherProvider.get().then(res => {
+                this.current = res;
+                this.status = 1;
+            });
+        },
+        methods: {
+            changeScaleTo: function(newScale) {
+                this.current.temperature = 
+                    _transformer(this.current.temperature)
+                        .from(this.current.scale)
+                        .to(newScale);
+                this.current.scale = newScale;
+            }
         }
-    };
+    });
 }
 
-const App = function(controller) {
-    let _controller = controller;
-    let weatherUI = null;
-    
-    let model = {
-        scales: SCALES_AVAILABLE,
-        current: {},
-        status: 0
-    };
-
-    return {
-        init: function() {            
-            weatherUI = new Vue({
-                el: '#app',
-                data: model,
-                methods: {
-                    changeScaleTo: function(newScale) {
-                        weatherUI.current.temperature = _controller.changeScaleTo(
-                            weatherUI.current.temperature,
-                            weatherUI.current.scale,
-                            newScale);
-                        weatherUI.current.scale = newScale;
-                    }
-                }
-            });
-            return this;
-        },
-        start: async function() {
-            let res = await _controller.getCurrentTemperature();
-            weatherUI.current = res;
-            weatherUI.status = 1;
-            return this;
-        }
-    };
-};
 
 let transformationService = new TransformationService();
 let temperatureService = new TemperatureTransformationService(transformationService);
 let convert = new Converter(temperatureService);
- 
-let controller = new AppController(
-    convert,
-    WeatherProviderBuilder.build(new FakeWeatherConnector(), AsyncWeatherProvider));
-let thermometerApp = new App(controller);
+let weather = WeatherProviderBuilder.build(new FakeWeatherConnector(), AsyncWeatherProvider);
 
-thermometerApp
-    .init()
-    .start();
+let thermometerApp = new AppController(convert, weather);
