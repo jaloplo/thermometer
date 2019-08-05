@@ -1,8 +1,8 @@
 * {
     background: none;
     border: 0;
-    color: black;
-    display: block;
+    color: #2d3436;
+    display: inline-block;
     font-family: serif;
     font-size: 100%;
     font-weight: 400;
@@ -11,6 +11,45 @@
     padding: 0;
 }
 
+head {
+    display: none;
+}
+
 #app {
-    margin: 0 auto;
+    padding: 10px 30px;
+}
+
+#app article header {
+    display: block;
+    margin-bottom: 30px;
+}
+
+#app article header h1 {
+    font-size: 8rem;
+}
+
+#app article header h1 small {
+    font-size: 1.5rem;
+    font-weight: bolder;
+}
+
+#app article ul {
+    text-align: center;
+    width: 100%;
+}
+
+#app article button {
+    background-color: #74b9ff;
+    border-radius: 3px;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: bolder;
+    margin: 0 10px;
+    padding: 5px 10px;
+}
+
+#app article button:disabled {
+    background-color: #dfe6e9;
+    color: #b2bec3;
+    font-weight: 400;
 }

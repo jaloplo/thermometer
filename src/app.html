@@ -8,17 +8,21 @@
     </head>
     <body>
         <div id="app">
-            <div v-if="status === 0">
-                <h3>Loading...</h3>
-            </div>
-            <div v-if="status === 1">
-                <div>Your temperature is {{ value.temperature }} {{ value.scale }}</div>
+            <article v-if="status === 0">
+                <header>
+                    <h1>Loading...</h1>
+                </header>
+            </article>
+            <article v-if="status === 1">
+                <header>
+                    <h1>{{ parseFloat(value.temperature).toFixed(2) }}<small>{{ value.scale }}</small></h1>
+                </header>
                 <ul>
                     <li v-for="sc in scales">
-                        <button v-bind:disabled="sc === value.scale" v-on:click="changeScaleTo(sc)">Change to {{ sc }}</button>
+                        <button v-bind:disabled="sc === value.scale" v-on:click="changeScaleTo(sc)">{{ sc }}</button>
                     </li>
                 </ul>
-            </div>
+            </article>
         </div>
     </body>
 </html>
