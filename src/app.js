@@ -40,16 +40,16 @@ const TransformationService = function() {
     };
 };
 
-/* # TemperatureTransformationService
- * Handle temperature transformation methods from one scale to another.
+/* # TemperatureTransformationRegister
+ * Adds temperature transformation methods from one scale to another to a TransformationService object.
  * Current scales supported are Celsius, Fahrenheit and Kelvin.
  *
  * ## Example
  * let ts = new TransformationService();
- * let temperatureService = new TemperatureTransformationService(ts);
- * let fahrenheit = temperatureService.get(CELSIUS_SCALE, FAHRENHEIT_SCALE, 32); // fahrenheit should be TODO:
+ * ts = new TemperatureTransformationRegister(ts);
+ * let fahrenheit = ts.get(CELSIUS_SCALE, FAHRENHEIT_SCALE, 32); // fahrenheit should be 89.6
  */
-const TemperatureTransformationService = function(transformationService) {
+const TemperatureTransformationRegister = function(transformationService) {
     let service = transformationService;
 
     service.register(CELSIUS_SCALE, KELVIN_SCALE, (degree) => degree + parseFloat(273.15));
@@ -70,7 +70,7 @@ const TemperatureTransformationService = function(transformationService) {
  * let ts = new TransformationService();
  * let temperatureService = new TemperatureTransformationService(ts);
  * let convert = new Converter(temperatureService);
- * let fahrenheit = convert(32).from(CELSIUS_SCALE).to(FAHRENHEIT_SCALE); // fahrenheit should be TODO:
+ * let fahrenheit = convert(32).from(CELSIUS_SCALE).to(FAHRENHEIT_SCALE); // fahrenheit should be 89.6
  */
 const Converter = function(service) {
     let _service = service;
@@ -170,8 +170,8 @@ const VueAppController = function(transformer, weatherProvider) {
 
 
 let transformationService = new TransformationService();
-let temperatureService = new TemperatureTransformationService(transformationService);
-let convert = new Converter(temperatureService);
+transformationService = new TemperatureTransformationRegister(transformationService);
+let convert = new Converter(transformationService);
 let weather = WeatherProviderBuilder.build(new FakeWeatherConnector(), AsyncWeatherProvider);
 
 let thermometerApp = new VueAppController(convert, weather);
