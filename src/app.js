@@ -68,8 +68,8 @@ const TemperatureTransformationRegister = function(transformationService) {
  * 
  * ## Example
  * let ts = new TransformationService();
- * let temperatureService = new TemperatureTransformationService(ts);
- * let convert = new Converter(temperatureService);
+ * ts = new TemperatureTransformationService(ts);
+ * let convert = new Converter(ts);
  * let fahrenheit = convert(32).from(CELSIUS_SCALE).to(FAHRENHEIT_SCALE); // fahrenheit should be 89.6
  */
 const Converter = function(service) {
