@@ -132,44 +132,46 @@ const WeatherProviderBuilder = {
     }
 };
 
-const VueApp = function(view, model, controller) {
-    let options = Object.assign({}, view, model, controller);
-    return new Vue(options);
-};
+
+const VueAppController = function(transformer, weatherProvider) {
+
+    let _transformer = transformer;
+    let _weatherProvider = weatherProvider;
+    
+    return new Vue({
+        // app view layer
+        el: '#app',
+        
+        // app model layer
+        data: {
+            scales: SCALES_AVAILABLE,
+            current: {},
+            status: 0
+        },
+
+        // app controller layer
+        beforeCreate: function() {
+            _weatherProvider.get().then(res => {
+                this.current = res;
+                this.status = 1;
+            });
+        },
+        methods: {
+            changeScaleTo: function(newScale) {
+                this.current.temperature = 
+                    _transformer(this.current.temperature)
+                        .from(this.current.scale)
+                        .to(newScale);
+                this.current.scale = newScale;
+            }
+        }
+    });
+}
+
 
 let transformationService = new TransformationService();
 let temperatureService = new TemperatureTransformationService(transformationService);
 let convert = new Converter(temperatureService);
 let weather = WeatherProviderBuilder.build(new FakeWeatherConnector(), AsyncWeatherProvider);
 
-let view = {
-    el: '#app'
-};
-
-let model = {
-    data: {
-        scales: SCALES_AVAILABLE,
-        current: {},
-        status: 0
-    }
-};
-
-let controller = {
-    beforeCreate: function() {
-        weather.get().then(res => {
-            this.current = res;
-            this.status = 1;
-        });
-    },
-    methods: {
-        changeScaleTo: function(newScale) {
-            this.current.temperature = 
-                convert(this.current.temperature)
-                    .from(this.current.scale)
-                    .to(newScale);
-            this.current.scale = newScale;
-        }
-    }
-};
-
-let thermometerApp = new VueApp(view, model, controller);
+let thermometerApp = new VueAppController(convert, weather);
