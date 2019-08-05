@@ -41,13 +41,13 @@ const TransformationService = function() {
  * ## Example
  * let ts = new TransformationService();
  * ts = new TemperatureTransformationRegister(ts);
- * let fahrenheit = ts.get(CELSIUS_SCALE, FAHRENHEIT_SCALE, 32); // fahrenheit should be 89.6
+ * let fahrenheit = ts.get('Celsius', 'Fahrenheit', 32); // fahrenheit should be 89.6
  */
 const TemperatureTransformationRegister = function(transformationService) {
     let service = transformationService;
 
-    service.register(TemperatureManager.CelsiusScaleKey, TemperatureManager.KelvinScaleKey, (degree) => degree + parseFloat(273.15));
-    service.register(TemperatureManager.KelvinScaleKey, TemperatureManager.CelsiusScaleKey, (degree) => degree - parseFloat(273.15));
+    service.register(TemperatureManager.CelsiusScaleKey, TemperatureManager.KelvinScaleKey, (degree) => degree + 273.15);
+    service.register(TemperatureManager.KelvinScaleKey, TemperatureManager.CelsiusScaleKey, (degree) => degree - 273.15);
     service.register(TemperatureManager.CelsiusScaleKey, TemperatureManager.FahrenheitScaleKey, (degree) => (9*degree/5) + 32);
     service.register(TemperatureManager.FahrenheitScaleKey, TemperatureManager.CelsiusScaleKey, (degree) => (5*(degree-32)) / 9);
     service.register(TemperatureManager.FahrenheitScaleKey, TemperatureManager.KelvinScaleKey, (degree) => (5*(degree-32)) / 9 + 273.15);
@@ -64,7 +64,7 @@ const TemperatureTransformationRegister = function(transformationService) {
  * let ts = new TransformationService();
  * ts = new TemperatureTransformationService(ts);
  * let convert = new Converter(ts);
- * let fahrenheit = convert(32).from(CELSIUS_SCALE).to(FAHRENHEIT_SCALE); // fahrenheit should be 89.6
+ * let fahrenheit = convert(32).from('Celsius').to('Fahrenheit'); // fahrenheit should be 89.6
  */
 const Converter = function(service) {
     let _service = service;
@@ -82,6 +82,13 @@ const Converter = function(service) {
     };
 };
 
+/* # TemperatureManager
+ * Manages all temperature features available like all scales availables and the conversion between scales.
+ * 
+ * ## Example
+ * let tManager = new TemperatureManager();
+ * tManager.convert(32).from(TemperatureManager.CelsiusScaleKey).to(TemperatureManager.FahrenheitScaleKey); // fahrenheit should be 89.6
+ */
 const TemperatureManager = function() {
     let transformationService = new TransformationService();
     transformationService = new TemperatureTransformationRegister(transformationService);
