@@ -178,16 +178,17 @@ const VueAppController = function(temperatureManager, weatherProvider) {
         },
         methods: {
             changeScaleTo: function(newScale) {
-                this.current.temperature = 
-                    _temperature.convert(this.current.temperature)
-                        .from(this.current.scale)
-                        .to(newScale);
+                let currentTemperature = this.current.temperature;
+                let currentScale = this.current.scale;
+
+                let newTemperature = _temperature.convert(currentTemperature).from(currentScale).to(newScale);
+
+                this.current.temperature = newTemperature;
                 this.current.scale = newScale;
             }
         }
     });
 }
-
 
 
 let weather = WeatherProviderBuilder.build(new FakeWeatherConnector(), AsyncWeatherProvider);
