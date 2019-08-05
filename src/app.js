@@ -1,9 +1,3 @@
-const CELSIUS_SCALE = 'Celsius';
-const FARENHEIT_SCALE = 'Farenheit';
-const KELVIN_SCALE = 'Kelvin';
-
-const SCALES_AVAILABLE = [CELSIUS_SCALE, FARENHEIT_SCALE, KELVIN_SCALE];
-
 /* # TransformationService
  * Handle transformation methods from one type to another.
  *
@@ -52,12 +46,12 @@ const TransformationService = function() {
 const TemperatureTransformationRegister = function(transformationService) {
     let service = transformationService;
 
-    service.register(CELSIUS_SCALE, KELVIN_SCALE, (degree) => degree + parseFloat(273.15));
-    service.register(KELVIN_SCALE, CELSIUS_SCALE, (degree) => degree - parseFloat(273.15));
-    service.register(CELSIUS_SCALE, FARENHEIT_SCALE, (degree) => (9*degree/5) + 32);
-    service.register(FARENHEIT_SCALE, CELSIUS_SCALE, (degree) => (5*(degree-32)) / 9);
-    service.register(FARENHEIT_SCALE, KELVIN_SCALE, (degree) => (5*(degree-32)) / 9 + 273.15);
-    service.register(KELVIN_SCALE, FARENHEIT_SCALE, (degree) => (9*(degree - 273.15)/5) + 32);
+    service.register(TemperatureManager.CelsiusScaleKey, TemperatureManager.KelvinScaleKey, (degree) => degree + parseFloat(273.15));
+    service.register(TemperatureManager.KelvinScaleKey, TemperatureManager.CelsiusScaleKey, (degree) => degree - parseFloat(273.15));
+    service.register(TemperatureManager.CelsiusScaleKey, TemperatureManager.FahrenheitScaleKey, (degree) => (9*degree/5) + 32);
+    service.register(TemperatureManager.FahrenheitScaleKey, TemperatureManager.CelsiusScaleKey, (degree) => (5*(degree-32)) / 9);
+    service.register(TemperatureManager.FahrenheitScaleKey, TemperatureManager.KelvinScaleKey, (degree) => (5*(degree-32)) / 9 + 273.15);
+    service.register(TemperatureManager.KelvinScaleKey, TemperatureManager.FahrenheitScaleKey, (degree) => (9*(degree - 273.15)/5) + 32);
 
     return service;
 };
@@ -87,6 +81,25 @@ const Converter = function(service) {
         };
     };
 };
+
+const TemperatureManager = function() {
+    let transformationService = new TransformationService();
+    transformationService = new TemperatureTransformationRegister(transformationService);
+    let convert = new Converter(transformationService);
+
+    return {
+        convert: convert,
+
+        getAvailableScales: function() {
+            return [TemperatureManager.CelsiusScaleKey, 
+                TemperatureManager.FahrenheitScaleKey, 
+                TemperatureManager.KelvinScaleKey];
+        }
+    };
+};
+TemperatureManager.CelsiusScaleKey = 'Celsius';
+TemperatureManager.FahrenheitScaleKey = 'Fahrenheit';
+TemperatureManager.KelvinScaleKey = 'Kelvin';
 
 
 const PositionController = function() {
@@ -133,9 +146,9 @@ const WeatherProviderBuilder = {
 };
 
 
-const VueAppController = function(transformer, weatherProvider) {
+const VueAppController = function(temperatureManager, weatherProvider) {
 
-    let _transformer = transformer;
+    let _temperature = temperatureManager;
     let _weatherProvider = weatherProvider;
     
     return new Vue({
@@ -144,7 +157,7 @@ const VueAppController = function(transformer, weatherProvider) {
         
         // app model layer
         data: {
-            scales: SCALES_AVAILABLE,
+            scales: _temperature.getAvailableScales(),
             current: {},
             status: 0
         },
@@ -159,7 +172,7 @@ const VueAppController = function(transformer, weatherProvider) {
         methods: {
             changeScaleTo: function(newScale) {
                 this.current.temperature = 
-                    _transformer(this.current.temperature)
+                    _temperature.convert(this.current.temperature)
                         .from(this.current.scale)
                         .to(newScale);
                 this.current.scale = newScale;
@@ -169,9 +182,7 @@ const VueAppController = function(transformer, weatherProvider) {
 }
 
 
-let transformationService = new TransformationService();
-transformationService = new TemperatureTransformationRegister(transformationService);
-let convert = new Converter(transformationService);
-let weather = WeatherProviderBuilder.build(new FakeWeatherConnector(), AsyncWeatherProvider);
 
-let thermometerApp = new VueAppController(convert, weather);
+let weather = WeatherProviderBuilder.build(new FakeWeatherConnector(), AsyncWeatherProvider);
+let temperatureManager = new TemperatureManager();
+let thermometerApp = new VueAppController(temperatureManager, weather);
