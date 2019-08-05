@@ -152,10 +152,29 @@ const WeatherProviderBuilder = {
     }
 };
 
+/* # StatusManager
+ * Manages the status of the application. 
+ + The only two status that are supported are 0 (initialization) and 1 (working).
+ */
+const StatusManager = function() {
+    let current = 0;
+
+    return  {
+        get: function() {
+            return current;
+        },
+
+        update: function(key) {
+            current = null === key ? 0 : 1;
+        }
+    };
+};
+
 
 const VueAppController = function(temperatureManager, weatherProvider) {
 
     let _temperature = temperatureManager;
+    let _statusManager = new StatusManager();
     let _weatherProvider = weatherProvider;
     
     return new Vue({
@@ -165,28 +184,35 @@ const VueAppController = function(temperatureManager, weatherProvider) {
         // app model layer
         data: {
             scales: _temperature.getAvailableScales(),
-            current: {},
-            status: 0
+            status: _statusManager.get(),
+            value: {},
         },
 
         // app controller layer
         beforeCreate: function() {
             _weatherProvider.get().then(res => {
-                this.current = res;
-                this.status = 1;
+                this.value = res;
             });
         },
+
         methods: {
             changeScaleTo: function(newScale) {
-                let currentTemperature = this.current.temperature;
-                let currentScale = this.current.scale;
+                let currentTemperature = this.value.temperature;
+                let currentScale = this.value.scale;
 
                 let newTemperature = _temperature.convert(currentTemperature).from(currentScale).to(newScale);
 
-                this.current.temperature = newTemperature;
-                this.current.scale = newScale;
+                this.value.temperature = newTemperature;
+                this.value.scale = newScale;
             }
-        }
+        },
+
+        watch: {
+            value: function() {
+                _statusManager.update(this.value);
+                this.status = _statusManager.get();
+            }
+        },
     });
 }
 
