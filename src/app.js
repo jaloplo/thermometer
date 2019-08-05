@@ -108,17 +108,13 @@ TemperatureManager.CelsiusScaleKey = 'Celsius';
 TemperatureManager.FahrenheitScaleKey = 'Fahrenheit';
 TemperatureManager.KelvinScaleKey = 'Kelvin';
 
-
-const PositionController = function() {
-    return {
-        getBrowserPosition: function() {
-            return new Promise(function(resolve, reject) {
-                navigator.geolocation.getCurrentPosition(resolve, reject);
-            });
-        }
-    };
-};
-
+/* # FakeWeatherConnector
+ * Simulates an API call that returns a value for a temperature an its scale.
+ * 
+ * ## Example
+ * let connector = new FakeWeatherConnector();
+ * connector.get().then(res => console.log(res)); // { temperature: 4.192741, scale: 'Celsius' }
+ */
 const FakeWeatherConnector = function() {
     return {
         get: function() {
@@ -132,24 +128,6 @@ const FakeWeatherConnector = function() {
             });
         },
     };
-};
-
-const AsyncWeatherProvider = function(weatherConnector) {
-    let _weatherConnector = weatherConnector;
-    
-    return {
-        get: function() {
-            return new Promise(function(resolve, reject) {
-                _weatherConnector.get().then(res => resolve(res));
-            });
-        }
-    };
-};
-
-const WeatherProviderBuilder = {
-    build: function(connector, provider) {
-        return new provider(connector);
-    }
 };
 
 /* # StatusManager
@@ -170,12 +148,19 @@ const StatusManager = function() {
     };
 };
 
-
-const VueAppController = function(temperatureManager, weatherProvider) {
+/* # VueAppController
+ * Controls the application implemented with Vue.js.
+ * 
+ * ## Example
+ * let connector = new FakeWeatherConnector();
+ * let temperatureManager = new TemperatureManager();
+ * let thermometerControllerApp = new VueAppController(temperatureManager, connector);
+ */
+const VueAppController = function(temperatureManager, weatherConnector) {
 
     let _temperature = temperatureManager;
     let _statusManager = new StatusManager();
-    let _weatherProvider = weatherProvider;
+    let _weather = weatherConnector;
     
     return new Vue({
         // app view layer
@@ -190,7 +175,7 @@ const VueAppController = function(temperatureManager, weatherProvider) {
 
         // app controller layer
         beforeCreate: function() {
-            _weatherProvider.get().then(res => {
+            _weather.get().then(res => {
                 this.value = res;
             });
         },
@@ -214,9 +199,25 @@ const VueAppController = function(temperatureManager, weatherProvider) {
             }
         },
     });
+};
+
+/* # App
+ * Runs the application.
+ * 
+ * ## Example
+ * let thermometerApp = new App(VueAppController).start();
+ */
+const App = function(controllerObject) {
+    let _controller = null;
+    return {
+        start: function() {
+            let connector = new FakeWeatherConnector();
+            let temperatureManager = new TemperatureManager();
+            _controller = new controllerObject(temperatureManager, connector);
+
+            return this;
+        }
+    };
 }
 
-
-let weather = WeatherProviderBuilder.build(new FakeWeatherConnector(), AsyncWeatherProvider);
-let temperatureManager = new TemperatureManager();
-let thermometerApp = new VueAppController(temperatureManager, weather);
+let thermometerApp = new App(VueAppController).start();
