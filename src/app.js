@@ -108,6 +108,9 @@ TemperatureManager.CelsiusScaleKey = 'Celsius';
 TemperatureManager.FahrenheitScaleKey = 'Fahrenheit';
 TemperatureManager.KelvinScaleKey = 'Kelvin';
 
+
+
+
 /* # FakeWeatherConnector
  * Simulates an API call that returns a value for a temperature an its scale.
  * 
@@ -121,14 +124,76 @@ const FakeWeatherConnector = function() {
             return new Promise(function(resolve, reject) {
                 setTimeout(function() {
                     resolve({
-                        temperature: Math.random() * 20,
-                        scale: 'Celsius'
+                        "coord": { "lon": 139,"lat": 35},
+                        "weather": [{
+                                "id": 800,
+                                "main": "Clear",
+                                "description": "clear sky",
+                                "icon": "01n"
+                        }],
+                        "base": "stations",
+                        "main": {
+                            "temp": 289.92,
+                            "pressure": 1009,
+                            "humidity": 92,
+                            "temp_min": 288.71,
+                            "temp_max": 290.93
+                        },
+                        "wind": {
+                            "speed": 0.47,
+                            "deg": 107.538
+                        },
+                        "clouds": {
+                            "all": 2
+                        },
+                        "dt": 1560350192,
+                        "sys": {
+                            "type": 3,
+                            "id": 2019346,
+                            "message": 0.0065,
+                            "country": "JP",
+                            "sunrise": 1560281377,
+                            "sunset": 1560333478
+                        },
+                        "timezone": 32400,
+                        "id": 1851632,
+                        "name": "Shuzenji",
+                        "cod": 200
                     });
                 }, 1000);
             });
         },
     };
 };
+
+
+const PositionController = function() {
+    return {
+        getBrowserPosition: function() {
+            return new Promise(function(resolve, reject) {
+                navigator.geolocation.getCurrentPosition(resolve, reject);
+            });
+        }
+    };
+};
+
+const WeatherService = function() {
+
+    let positionController = new PositionController();
+    let weatherProvider = new FakeWeatherConnector();
+
+    return {
+        get: async function() {
+            let position = await positionController.getBrowserPosition();
+            let latitude = position.coords.latitude;
+            let longitude = position.coords.longitude;
+
+            return weatherProvider.get(latitude, longitude);
+        }
+    };
+};
+
+
 
 /* # StatusManager
  * Manages the status of the application. 
@@ -176,7 +241,10 @@ const VueAppController = function(temperatureManager, weatherConnector) {
         // app controller layer
         beforeCreate: function() {
             _weather.get().then(res => {
-                this.value = res;
+                this.value = {
+                    temperature: res.main.temp,
+                    scale: TemperatureManager.CelsiusScaleKey
+                };
             });
         },
 
@@ -211,7 +279,7 @@ const App = function(controllerObject) {
     let _controller = null;
     return {
         start: function() {
-            let connector = new FakeWeatherConnector();
+            let connector = new WeatherService();
             let temperatureManager = new TemperatureManager();
             _controller = new controllerObject(temperatureManager, connector);
 
