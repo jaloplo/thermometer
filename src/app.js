@@ -167,6 +167,26 @@ const FakeWeatherConnector = function() {
 };
 
 
+const OpenWeatherApiConnector = function() {
+    let options = {
+        key: '0ae7fbee8ee8f2df5bfa7f60a367ef18',
+        protocol: 'https',
+        url: 'api.openweather.org/data/2.5',
+        method: 'weather',
+    };
+
+    function build() {
+        return $`${options.protocol}://${options.url}/${options.method}?key=${options.key}`
+    }
+
+    return {
+        get: function(latitude, longitude) {
+            let apiUri = $`${build()}&latitude=${latitude}&longitude=${longitude}`;
+            return superagent.get(apiUri);
+        }
+    };
+};
+
 const PositionController = function() {
     return {
         getBrowserPosition: function() {
@@ -180,7 +200,7 @@ const PositionController = function() {
 const WeatherService = function() {
 
     let positionController = new PositionController();
-    let weatherProvider = new FakeWeatherConnector();
+    let weatherProvider = new OpenWeatherApiConnector();
 
     return {
         get: async function() {
@@ -192,8 +212,6 @@ const WeatherService = function() {
         }
     };
 };
-
-
 
 /* # StatusManager
  * Manages the status of the application. 
