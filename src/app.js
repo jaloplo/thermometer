@@ -191,7 +191,7 @@ const OpenWeatherApiConnector = function() {
 
 const CachedApiConnector = function(sourceConnector) {
 
-    let cache = window.localStorage;
+    let cache = new LocalStorageCacheManager();
     let connector = sourceConnector;
 
     return {
@@ -201,10 +201,12 @@ const CachedApiConnector = function(sourceConnector) {
                 longitude: longitude,
             });
 
-            if(null !== cache.getItem(key)) {
+            console.log('key --> ', key);
+
+            if(cache.has(key)) {
                 console.log('>>> from cache');
                 return new Promise(function(resolve, reject) {
-                    resolve(JSON.parse(cache.getItem(key)));
+                    resolve(cache.get(key));
                 });
             } else {
                 console.log('>>> from api');
@@ -216,8 +218,7 @@ const CachedApiConnector = function(sourceConnector) {
                             let value = {
                                 temp: res.body.main.temp
                             };
-                            let data = JSON.stringify(value);
-                            cache.setItem(key, data);
+                            cache.set(key, value);
                             resolve(value);
                         });
                 });
