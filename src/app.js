@@ -124,41 +124,43 @@ const FakeWeatherConnector = function() {
             return new Promise(function(resolve, reject) {
                 setTimeout(function() {
                     resolve({
-                        "coord": { "lon": 139,"lat": 35},
-                        "weather": [{
-                                "id": 800,
-                                "main": "Clear",
-                                "description": "clear sky",
-                                "icon": "01n"
-                        }],
-                        "base": "stations",
-                        "main": {
-                            "temp": 289.92,
-                            "pressure": 1009,
-                            "humidity": 92,
-                            "temp_min": 288.71,
-                            "temp_max": 290.93
-                        },
-                        "wind": {
-                            "speed": 0.47,
-                            "deg": 107.538
-                        },
-                        "clouds": {
-                            "all": 2
-                        },
-                        "dt": 1560350192,
-                        "sys": {
-                            "type": 3,
-                            "id": 2019346,
-                            "message": 0.0065,
-                            "country": "JP",
-                            "sunrise": 1560281377,
-                            "sunset": 1560333478
-                        },
-                        "timezone": 32400,
-                        "id": 1851632,
-                        "name": "Shuzenji",
-                        "cod": 200
+                        body: {
+                            "coord": { "lon": 139,"lat": 35},
+                            "weather": [{
+                                    "id": 800,
+                                    "main": "Clear",
+                                    "description": "clear sky",
+                                    "icon": "01n"
+                            }],
+                            "base": "stations",
+                            "main": {
+                                "temp": 289.92,
+                                "pressure": 1009,
+                                "humidity": 92,
+                                "temp_min": 288.71,
+                                "temp_max": 290.93
+                            },
+                            "wind": {
+                                "speed": 0.47,
+                                "deg": 107.538
+                            },
+                            "clouds": {
+                                "all": 2
+                            },
+                            "dt": 1560350192,
+                            "sys": {
+                                "type": 3,
+                                "id": 2019346,
+                                "message": 0.0065,
+                                "country": "JP",
+                                "sunrise": 1560281377,
+                                "sunset": 1560333478
+                            },
+                            "timezone": 32400,
+                            "id": 1851632,
+                            "name": "Shuzenji",
+                            "cod": 200
+                        }
                     });
                 }, 1000);
             });
@@ -170,19 +172,56 @@ const FakeWeatherConnector = function() {
 const OpenWeatherApiConnector = function() {
     let options = {
         key: '0ae7fbee8ee8f2df5bfa7f60a367ef18',
-        protocol: 'https',
-        url: 'api.openweather.org/data/2.5',
+        protocol: 'http',
+        url: 'api.openweathermap.org/data/2.5',
         method: 'weather',
     };
 
     function build() {
-        return $`${options.protocol}://${options.url}/${options.method}?key=${options.key}`
+        return `${options.protocol}://${options.url}/${options.method}?APPID=${options.key}`
     }
 
     return {
         get: function(latitude, longitude) {
-            let apiUri = $`${build()}&latitude=${latitude}&longitude=${longitude}`;
+            let apiUri = `${build()}&lat=${latitude}&lon=${longitude}`;
             return superagent.get(apiUri);
+        }
+    };
+};
+
+const CachedApiConnector = function(sourceConnector) {
+
+    let cache = window.localStorage;
+    let connector = sourceConnector;
+
+    return {
+        get: function(latitude, longitude) {
+            let key = JSON.stringify({
+                latitude: latitude,
+                longitude: longitude,
+            });
+
+            if(null !== cache.getItem(key)) {
+                console.log('>>> from cache');
+                return new Promise(function(resolve, reject) {
+                    resolve(JSON.parse(cache.getItem(key)));
+                });
+            } else {
+                console.log('>>> from api');
+                return new Promise(function(resolve, reject) {
+                    connector
+                        .get(latitude, longitude)
+                        .then(res => {
+                            console.log(res);
+                            let value = {
+                                temp: res.body.main.temp
+                            };
+                            let data = JSON.stringify(value);
+                            cache.setItem(key, data);
+                            resolve(value);
+                        });
+                });
+            }
         }
     };
 };
@@ -200,7 +239,8 @@ const PositionController = function() {
 const WeatherService = function() {
 
     let positionController = new PositionController();
-    let weatherProvider = new OpenWeatherApiConnector();
+    // let weatherProvider = new CachedApiConnector(new FakeWeatherConnector());
+    let weatherProvider = new CachedApiConnector(new OpenWeatherApiConnector());
 
     return {
         get: async function() {
@@ -260,8 +300,8 @@ const VueAppController = function(temperatureManager, weatherConnector) {
         beforeCreate: function() {
             _weather.get().then(res => {
                 this.value = {
-                    temperature: res.main.temp,
-                    scale: TemperatureManager.CelsiusScaleKey
+                    temperature: res.temp,
+                    scale: TemperatureManager.KelvinScaleKey
                 };
             });
         },
