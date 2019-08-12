@@ -33,3 +33,11 @@ class LocalStorageCacheManager extends CacheManager {
         this.store.setItem(key, JSON.stringify(value));
     }
 }
+
+class SessionStorageCacheManager extends LocalStorageCacheManager {
+
+    constructor() {
+        super();
+        this.store = window.sessionStorage;
+    }
+}
