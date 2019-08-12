@@ -194,33 +194,37 @@ const CachedApiConnector = function(sourceConnector) {
     let cache = new LocalStorageCacheManager();
     let connector = sourceConnector;
 
+    function buildKey(latitude, longitude) {
+        return JSON.stringify({
+            latitude: latitude,
+            longitude: longitude,
+        });
+    }
+
     return {
         get: function(latitude, longitude) {
-            let key = JSON.stringify({
-                latitude: latitude,
-                longitude: longitude,
-            });
+            let key = buildKey(latitude, longitude);
+            let existsKey = cache.has(key);
+            let hasExpired = existsKey ? new Date(cache.get(key).expires) < new Date() : true;
 
-            console.log('key --> ', key);
-
-            if(cache.has(key)) {
-                console.log('>>> from cache');
-                return new Promise(function(resolve, reject) {
-                    resolve(cache.get(key));
-                });
-            } else {
-                console.log('>>> from api');
+            if(!existsKey || hasExpired) {
                 return new Promise(function(resolve, reject) {
                     connector
                         .get(latitude, longitude)
                         .then(res => {
-                            console.log(res);
+                            let expirationDate = new Date();
+                            expirationDate.setMinutes(expirationDate.getMinutes() + 10);
                             let value = {
-                                temp: res.body.main.temp
+                                temp: res.body.main.temp,
+                                expires: expirationDate,
                             };
                             cache.set(key, value);
                             resolve(value);
                         });
+                });
+            } else {
+                return new Promise(function(resolve, reject) {
+                    resolve(cache.get(key));
                 });
             }
         }
