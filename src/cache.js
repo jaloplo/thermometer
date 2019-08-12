@@ -22,15 +22,25 @@ class LocalStorageCacheManager extends CacheManager {
     }
 
     get(key) {
-        return JSON.parse(this.store.getItem(key));
+        return this.has(key)
+            ? JSON.parse(this.store.getItem(key)).value
+            : null;
     }
 
     has(key) {
-        return null !== this.store.getItem(key);
+        let existsKey = null !== this.store.getItem(key);
+        let hasExpired = existsKey 
+            ? new Date(JSON.parse(this.store.getItem(key)).expires) < new Date()
+            : false;
+        return existsKey && !hasExpired;
     }
 
-    set(key, value) {
-        this.store.setItem(key, JSON.stringify(value));
+    set(key, value, expires) {
+        let data = {
+            value: value,
+            expires: expires,
+        };
+        this.store.setItem(key, JSON.stringify(data));
     }
 }
 

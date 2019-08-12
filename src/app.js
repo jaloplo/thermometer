@@ -204,10 +204,9 @@ const CachedApiConnector = function(sourceConnector) {
     return {
         get: function(latitude, longitude) {
             let key = buildKey(latitude, longitude);
-            let existsKey = cache.has(key);
-            let hasExpired = existsKey ? new Date(cache.get(key).expires) < new Date() : true;
-
-            if(!existsKey || hasExpired) {
+            
+            if(!cache.has(key)) {
+                console.log('>>> from api');
                 return new Promise(function(resolve, reject) {
                     connector
                         .get(latitude, longitude)
@@ -215,14 +214,14 @@ const CachedApiConnector = function(sourceConnector) {
                             let expirationDate = new Date();
                             expirationDate.setMinutes(expirationDate.getMinutes() + 10);
                             let value = {
-                                temp: res.body.main.temp,
-                                expires: expirationDate,
+                                temp: res.body.main.temp
                             };
-                            cache.set(key, value);
+                            cache.set(key, value, expirationDate);
                             resolve(value);
                         });
                 });
             } else {
+                console.log('>>> cached');
                 return new Promise(function(resolve, reject) {
                     resolve(cache.get(key));
                 });
