@@ -189,10 +189,17 @@ const OpenWeatherApiConnector = function() {
     };
 };
 
+/* # TemperatureManager
+ * Manages all temperature features available like all scales availables and the conversion between scales.
+ * 
+ * ## Example
+ * let tManager = new TemperatureManager();
+ * tManager.convert(32).from(TemperatureManager.CelsiusScaleKey).to(TemperatureManager.FahrenheitScaleKey); // fahrenheit should be 89.6
+ */
 const CachedApiConnector = function(sourceConnector) {
 
-    let cache = new LocalStorageCacheManager();
-    let connector = sourceConnector;
+    let cache = Context.Cache.Persistent,
+        connector = sourceConnector;
 
     function buildKey(latitude, longitude) {
         return JSON.stringify({
@@ -206,7 +213,6 @@ const CachedApiConnector = function(sourceConnector) {
             let key = buildKey(latitude, longitude);
             
             if(!cache.has(key)) {
-                console.log('>>> from api');
                 return new Promise(function(resolve, reject) {
                     connector
                         .get(latitude, longitude)
@@ -221,7 +227,6 @@ const CachedApiConnector = function(sourceConnector) {
                         });
                 });
             } else {
-                console.log('>>> cached');
                 return new Promise(function(resolve, reject) {
                     resolve(cache.get(key));
                 });
@@ -350,4 +355,10 @@ const App = function(controllerObject) {
     };
 }
 
+let Context = {
+    Cache: {
+        Persistent: new LocalStorageCacheManager(),
+        Volatile: new SessionStorageCacheManager(),
+    }
+};
 let thermometerApp = new App(VueAppController).start();
