@@ -109,8 +109,6 @@ TemperatureManager.FahrenheitScaleKey = 'Fahrenheit';
 TemperatureManager.KelvinScaleKey = 'Kelvin';
 
 
-
-
 /* # FakeWeatherConnector
  * Simulates an API call that returns a value for a temperature an its scale.
  * 
@@ -168,7 +166,13 @@ const FakeWeatherConnector = function() {
     };
 };
 
-
+/* # OpenWeatherApiConnector
+ * Manages calls to the weather api service.
+ * 
+ * ## Example
+ * let connector = new OpenWeatherApiConnector();
+ * connector.get(1, 1);
+ */
 const OpenWeatherApiConnector = function() {
     let options = {
         key: '0ae7fbee8ee8f2df5bfa7f60a367ef18',
@@ -231,6 +235,13 @@ const CachedApiConnector = function(sourceConnector) {
     };
 };
 
+/* # PositionController
+ * Manages the coordinates of the current browser position.
+ * 
+ * ## Example
+ * let position = new PositionController();
+ * position.getBrowserPosition();
+ */
 const PositionController = function() {
     return {
         getBrowserPosition: function() {
@@ -241,10 +252,12 @@ const PositionController = function() {
     };
 };
 
+/* # WeatherService
+ * Provides a way to obtain the temperature of the browser based on its location.
+ */
 const WeatherService = function() {
 
     let positionController = new PositionController();
-    // let weatherProvider = new CachedApiConnector(new FakeWeatherConnector());
     let weatherProvider = new CachedApiConnector(new OpenWeatherApiConnector());
 
     return {
@@ -351,10 +364,14 @@ const App = function(controllerObject) {
     };
 }
 
+/* # Context
+ * Keeps properties of the whole application context.
+ */
 let Context = {
     Cache: {
         Persistent: new LocalStorageCacheManager(),
         Volatile: new SessionStorageCacheManager(),
     }
 };
+
 let thermometerApp = new App(VueAppController).start();
