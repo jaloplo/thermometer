@@ -189,12 +189,8 @@ const OpenWeatherApiConnector = function() {
     };
 };
 
-/* # TemperatureManager
- * Manages all temperature features available like all scales availables and the conversion between scales.
- * 
- * ## Example
- * let tManager = new TemperatureManager();
- * tManager.convert(32).from(TemperatureManager.CelsiusScaleKey).to(TemperatureManager.FahrenheitScaleKey); // fahrenheit should be 89.6
+/* # CachedApiConnector
+ * Returns a value from the API or from the Cache.
  */
 const CachedApiConnector = function(sourceConnector) {
 
