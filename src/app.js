@@ -175,7 +175,7 @@ const FakeWeatherConnector = function() {
  */
 const OpenWeatherApiConnector = function() {
     let options = {
-        key: '0ae7fbee8ee8f2df5bfa7f60a367ef18',
+        key: AppSettings.WeatherApi.Key,
         protocol: 'http',
         url: 'api.openweathermap.org/data/2.5',
         method: 'weather',
