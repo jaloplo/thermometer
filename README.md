@@ -11,6 +11,12 @@ Some of the techinques applied are:
 * _Promises_, for simulating API call to get the weather of the user location,
 * _Status pattern_, just for knowing if API call has ended.
 
+## Features
+
+**Thermometer** app shows the temperature of the browser based on its location. To get the right coordinates it uses the [Geolocation API](https://w3c.github.io/geolocation-api/#navi-geo) provided as a property in the browser. The _latitude_ and _longitude_ are obtained and passed to the weather API service, in this case I selected [OpenWeatherMap](https://openweathermap.org/api), that returns the weather for that coordinates.
+
+In order to have a better performance and not make lot of calls to the API service, I implemented a _cache_ functionality encapsulating the [Web Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API) (Local and Session) so the application can used them as persistent or volatile ways.
+
 
 ## More stuff
 
